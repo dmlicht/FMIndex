@@ -165,7 +165,6 @@ def main():
         t = f.read()
 
     fm_index = FMIndex(t + '$')
-    # exit(0)
 
     print("text processed, enter EOF when done.")
     try:
