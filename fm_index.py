@@ -1,62 +1,74 @@
-import collections
+from collections import Counter
+import itertools
 import sys
+from typing import List, Mapping
+
 import t_rank
-from suffix_array import Suffix_array
-# import tools
+from suffix_array import SuffixArray
 
 
-class FMIndex(object):
+def calculate_n_occuring_lower_letters(text: List[str]) -> Mapping[str, int]:
+    """ returns a mapping of characters to the number of lexicographically lower valued letters occurring in the string.
+    A lexicographically lower valued character is one that would appear earlier in the alphabet.
+    For example A is lexicographically lower valued than B. """
+    character_counts = Counter(text)
+    lexicographically_sorted_character_counts = sorted(character_counts.items())
+
+    lower_char_count = 0
+    n_occurring_lower_letters = {}
+    for (key, value) in lexicographically_sorted_character_counts:
+        n_occurring_lower_letters[key] = lower_char_count
+        lower_char_count += value
+    return n_occurring_lower_letters
+
+
+def create_suffix_array_naive(text):
+    return sorted(range(len(text)), key=lambda x: text[x:])
+
+
+class FMIndex():
     def __init__(self, text):
-            #handles pysuffix sorting
-            self.text = text
+        # handles pysuffix sorting
+        self.text = text
 
-            self.text_len = len(text)
-            # text_unicode = tools.utf82unicode(text)
-            sa = Suffix_array()
-            sa._add_str(text)
-            sa.karkkainen_sort()
-            sa.str_array = "" #free up some memory
-            self.suffix_array = sa.suffix_array[:-3] #for some reason pysuffix appends 3 0's at the end of the suffix array
-            sa = "" #free up more mem
+        self.text_len = len(text)
+        # text_unicode = tools.utf82unicode(text)
 
-            # self.suffix_array = self.create_suffix_array(self.text)
+        # TODO: use instead of self.create_suffix_array if we need faster suffix array creation
+        # sa = SuffixArray()
+        # sa._add_str(text)
+        # sa.karkkainen_sort()
+        # sa.str_array = ""  # free up some memory
+        # self.suffix_array = sa.suffix_array[:-3]  # pysuffix appends 3 0's at the end of the suffix array
+        # del sa
 
-            #bwt = burrows wheeler transformed string
-            self.bwt = [self.text[i-1] for i in self.suffix_array]
+        self.suffix_array = create_suffix_array_naive(self.text)
 
-            #occurences of lexicographically lower valued characters in text
-            self.occ_lex_lower = self.calculate_occ_lex_lower(self.bwt)
-            self.rank_cps = t_rank.TRank(self.bwt, self.occ_lex_lower.keys())
+        # bwt = burrows wheeler transformed string
+        self.bwt = [self.text[i - 1] for i in self.suffix_array]
 
-    #NOTE:Below two function (csa, rc) not being used
-    #just temporarily kept to verify results of karkkainen sort
-    #until more permanant solution in place
-    def create_suffix_array(self, text):
-        """create suffix array representation of given text"""
-        suffix_refs = range(self.text_len)
-        return sorted(suffix_refs, cmp=self.ref_comp)
+        # occurrences of lexicographically lower valued characters in text
+        self.occ_lex_lower = calculate_n_occuring_lower_letters(self.bwt)
+        self.rank_cps = t_rank.TRank(self.bwt, self.occ_lex_lower.keys())
+
+    # NOTE:Below two function (csa, rc) not being used
+    # just temporarily kept to verify results of karkkainen sort
+    # until more permanant solution in place
+    # def create_suffix_array(self, text):
+    #     """create suffix array representation of given text"""
+    #     suffix_refs = range(len(text))
+    #     # TODO: Solve comparator issue
+    #     return sorted(suffix_refs, cmp=self.ref_comp)
 
     def ref_comp(self, x, y):
         """compare two references to the text
         checks which points to a greater valued suffix"""
         i = 0
-        while self.text[x+i] == self.text[y+i]:
-            if self.text[x+i] == '$':
+        while self.text[x + i] == self.text[y + i]:
+            if self.text[x + i] == '$':
                 return x - y
             i += 1
-        return ord(self.text[x+i]) - ord(self.text[y+i])
-
-    def calculate_occ_lex_lower(self, l):
-        """returns a dict containing the counts of occurences of 
-        lexicographically lower valued characters for a given character"""
-        counter = collections.Counter(l)
-        sorted_counts = sorted(counter.items())
-        lower_char_count = 0
-        occ_lex_lower = {}
-        for (key, value) in sorted_counts:
-            occ_lex_lower[key] = lower_char_count
-            lower_char_count += value
-        return occ_lex_lower
+        return ord(self.text[x + i]) - ord(self.text[y + i])
 
     def occurrences(self, p):
         """return indices of occurrences of pattern in the text"""
@@ -74,14 +86,14 @@ class FMIndex(object):
         end = self.text_len - 1
         for c in rs:
             start, end = self.backtrace_step(c, start, end)
-            if start > end:     #start will be greater than end if no matches
+            if start > end:  # start will be greater than end if no matches
                 break
         return start, end + 1
 
     def backtrace_step(self, c, start, end):
         """returns start and end of range backtraced one step
-        start will be greater than end if no occurences w/in range"""
-        if c not in self.occ_lex_lower.keys(): 
+        start will be greater than end if no occurrences w/in range"""
+        if c not in self.occ_lex_lower.keys():
             start = end + 1
             return start, end
         start = self.rank_cps.rank_at_row(c, start - 1) + self.occ_lex_lower[c] + 1
@@ -89,12 +101,12 @@ class FMIndex(object):
         return start, end
 
     def contains_substring(self, p):
-        """returns true is there is at least one occurence of p indexed"""
+        """returns true is there is at least one occurrence of p indexed"""
         start, end = self.get_range(p)
         return start < end
 
-    #in this function we backtrace the given pattern through the index
-    #checking for prefixes at every step (indicated by '$')
+    # in this function we backtrace the given pattern through the index
+    # checking for prefixes at every step (indicated by '$')
     def get_prefix_overlaps(self, p, min_overlap_len):
         """returns all strings with prefix overlap over given min_overlap_len"""
         rs = reversed(p)
@@ -110,31 +122,32 @@ class FMIndex(object):
             if min_overlap_len <= chars_into_p < len(p):
                 overlaps = self.elements_preceeded_by_sep(start, end)
                 # if overlaps:
-                #     print 'fm:', overlaps
+                #     print('fm:', overlaps
                 overlaps = [(self.get_read_at_offset(i), chars_into_p) for i in overlaps]
                 all_overlaps.extend(overlaps)
         return all_overlaps
-    #//NOTE: this function is very similar to get_range
-    #is there some clever way to re-use this code?
+
+    # //NOTE: this function is very similar to get_range
+    # is there some clever way to re-use this code?
 
     def elements_preceeded_by_sep(self, start, end):
         """return list of indices between range directly preceeded by '$' """
-        indices = self.suffix_array[start:end+1]
-        return [i for i in indices if self.text[i-1] == '$']
+        indices = self.suffix_array[start:end + 1]
+        return [i for i in indices if self.text[i - 1] == '$']
         # start, end = self.backtrace_step('$', start, end)
-        #+1 because we are getting the indices of the seperators, not the first chars
+        # +1 because we are getting the indices of the separators, not the first chars
         # return [i + 1 for i in self.suffix_array[start:end+1]] 
 
-    #NOTE: This function is no longer used
-    #This is left in tact for comparison to get_prefix_overlaps()
+    # NOTE: This function is no longer used
+    # This is left in tact for comparison to get_prefix_overlaps()
     def find_prefixes(self, p):
-        occurences = self.occurrences(p)
-        prefixes = [occ for occ in occurences if self.text[occ-1] == '$']
+        occurrences = self.occurrences(p)
+        prefixes = [occ for occ in occurrences if self.text[occ - 1] == '$']
         return prefixes
 
-    #NOTE: This method only works if multiple reads are passed as a '$' seperated txt
-    #NOTE: this function does not work using pysuffix does not prioritize
-    # seperator characters that occur earlier in the string
+    # NOTE: This method only works if multiple reads are passed as a '$' separated txt
+    # NOTE: this function does not work using pysuffix does not prioritize
+    # separator characters that occur earlier in the string
     # to get this function working again, you must roll your own suffix sorting
     def get_nth_read(self, n):
         """Gets the nth stored element
@@ -149,23 +162,22 @@ class FMIndex(object):
             chars.append(bw_c)
         return ''.join(reversed(chars))[1:]
 
-    #NOTE: Refactor when text is no longer saved
+    # NOTE: Refactor when text is no longer saved
     def get_read_at_offset(self, offset):
-        """returns the read that occurs at given offset
-        O(|read|) runtime"""
+        """returns the read that occurs at given offset O(|read|) runtime"""
         before = []
         after = []
 
-        #get all characters up to previous seperator
-        for i in xrange(1, offset + 1):
+        # get all characters up to previous separator
+        for i in range(1, offset + 1):
             prev_char = self.text[offset - i]
             if prev_char == '$':
                 break
             else:
                 before.append(prev_char)
 
-        #get all character up to next seperator
-        for i in xrange(self.text_len - offset):
+        # get all character up to next separator
+        for i in range(self.text_len - offset):
             next_char = self.text[offset + i]
             if next_char == '$':
                 break
@@ -179,7 +191,7 @@ class FMIndex(object):
 
 def main():
     if len(sys.argv) != 2:
-        print "Please call script in the following format: python fm_index.py file_to_build_index_of.txt"
+        print("Please call script in the following format: python fm_index.py file_to_build_index_of.txt")
         exit()
     t = ""
     with open(sys.argv[1]) as f:
@@ -188,18 +200,18 @@ def main():
     fm_index = FMIndex(t + '$')
     # exit(0)
 
-
-    print "text processed, enter EOF when done."
+    print("text processed, enter EOF when done.")
     try:
         while True:
-            p = raw_input("Enter string to search for occurences: ")
-            occurences = fm_index.occurrences(p)
-            print sorted(occurences)
-            print [fm_index.text[i:i+len(p)] for i in occurences]
-            print len(occurences)
-    except(EOFError):
-        print ""
+            p = input("Enter string to search for occurrences: ")
+            occurrences = fm_index.occurrences(p)
+            print(sorted(occurrences))
+            print([fm_index.text[i:i + len(p)] for i in occurrences])
+            print(len(occurrences))
+    except EOFError:
+        print("")
         exit(0)
+
 
 if __name__ == "__main__":
     main()
