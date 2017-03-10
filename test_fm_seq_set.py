@@ -1,6 +1,6 @@
 import pytest
 
-import fm_index
+import fmindex
 import random
 
 END_CHAR = '$'
@@ -32,7 +32,7 @@ def joined_words(words):
 
 @pytest.fixture
 def index(joined_words):
-    return fm_index.FMIndex(joined_words)
+    return fmindex.FMIndex(joined_words)
 
 
 def test_get_read_at_offset(words, index):

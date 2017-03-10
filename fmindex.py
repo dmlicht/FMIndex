@@ -1,7 +1,7 @@
 from collections import Counter
 import itertools
 import sys
-from typing import List, Mapping
+from typing import List, Mapping, Sequence
 
 import t_rank
 from suffix_array import SuffixArray
@@ -70,9 +70,9 @@ class FMIndex():
             i += 1
         return ord(self.text[x + i]) - ord(self.text[y + i])
 
-    def occurrences(self, p):
+    def find(self, sub: str) -> Sequence[int]:
         """return indices of occurrences of pattern in the text"""
-        start, end = self.get_range(p)
+        start, end = self.get_range(sub)
         if start < end:
             return self.suffix_array[start:end]
         else:
@@ -141,7 +141,7 @@ class FMIndex():
     # NOTE: This function is no longer used
     # This is left in tact for comparison to get_prefix_overlaps()
     def find_prefixes(self, p):
-        occurrences = self.occurrences(p)
+        occurrences = self.find(p)
         prefixes = [occ for occ in occurrences if self.text[occ - 1] == '$']
         return prefixes
 
@@ -191,7 +191,7 @@ class FMIndex():
 
 def main():
     if len(sys.argv) != 2:
-        print("Please call script in the following format: python fm_index.py file_to_build_index_of.txt")
+        print("Please call script in the following format: python fmindex.py file_to_build_index_of.txt")
         exit()
     t = ""
     with open(sys.argv[1]) as f:
@@ -204,7 +204,7 @@ def main():
     try:
         while True:
             p = input("Enter string to search for occurrences: ")
-            occurrences = fm_index.occurrences(p)
+            occurrences = fm_index.find(p)
             print(sorted(occurrences))
             print([fm_index.text[i:i + len(p)] for i in occurrences])
             print(len(occurrences))

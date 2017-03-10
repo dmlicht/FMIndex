@@ -1,7 +1,7 @@
 import random
 import time
 
-import fm_index
+import fmindex
 
 READ_SIZE = 40
 COVERAGE = 5
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     joined_reads = '$'.join(reads) + '$'
 
     start_time = time.time()
-    fmi = fm_index.FMIndex(joined_reads)
+    fmi = fmindex.FMIndex(joined_reads)
     end_time = time.time()
     print('index build time', end_time - start_time)
 # filter index

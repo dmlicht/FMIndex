@@ -1,9 +1,9 @@
 import pytest
 
-import fm_index
+import fmindex
 from collections import Counter
 
-from fm_index import calculate_n_occuring_lower_letters, FMIndex
+from fmindex import calculate_n_occuring_lower_letters, FMIndex
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def index(text):
 
 def test_create_suffix_array_naive():
     example = "abacad"
-    suffix_array = fm_index.create_suffix_array_naive(example)
+    suffix_array = fmindex.create_suffix_array_naive(example)
     expected = [0, 2, 4, 1, 3, 5]
     assert expected == suffix_array
 
@@ -45,7 +45,7 @@ def test_counts_from_get_occurrences(example_text):
     # read in data
     return
 
-    index = fm_index.FMIndex(example_text)
+    index = fmindex.FMIndex(example_text)
 
     distinct_words = set(example_text.split())
     # count the words the old fashioned way
@@ -62,7 +62,7 @@ def test_counts_from_get_occurrences(example_text):
     # count the words using fm index
     fm_occurence_counts = {}
     for word in distinct_words:
-        fm_occurence_counts[word] = len(index.occurrences(word))
+        fm_occurence_counts[word] = len(index.find(word))
 
     # compare!
     print(counter)
