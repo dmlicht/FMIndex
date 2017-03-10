@@ -46,7 +46,6 @@ def test_get_read_at_offset(words, index):
         read_starts_at = read_starts_at + len(words[ii]) + 1
 
 
-@pytest.skip
-def test_get_nth_read(words, index):
-    for ii, word in enumerate(words):
-        assert index.get_nth_read(ii) == word
+# def test_get_nth_read(words, index):
+#     for ii, word in enumerate(words):
+#         assert index.get_nth_read(ii) == word

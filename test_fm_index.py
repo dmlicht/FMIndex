@@ -1,9 +1,10 @@
+from collections import Counter
+
 import pytest
 
 import fmindex
-from collections import Counter
-
-from fmindex import calculate_n_occuring_lower_letters, FMIndex
+from fmindex import n_less_than, FMIndex
+from util import find_all
 
 
 @pytest.fixture
@@ -18,8 +19,8 @@ def example_text():
 
 
 @pytest.fixture
-def index(text):
-    return FMIndex(text)
+def index(example_string):
+    return FMIndex(example_string)
 
 
 def test_create_suffix_array_naive():
@@ -29,9 +30,9 @@ def test_create_suffix_array_naive():
     assert expected == suffix_array
 
 
-def test_calculate_occ_lex_lower(example_string):
+def test_n_less_than(example_string):
     counter = Counter(example_string)
-    occ_lex_lower = calculate_n_occuring_lower_letters(example_string)
+    occ_lex_lower = n_less_than(example_string)
     sorted_counts = sorted(counter.items())
     for i in range(len(sorted_counts) - 1):
         current_letter = sorted_counts[i][0]
@@ -41,31 +42,20 @@ def test_calculate_occ_lex_lower(example_string):
         assert current_letter_count == diff
 
 
-def test_counts_from_get_occurrences(example_text):
-    # read in data
-    return
+def test_naive_find_all():
+    assert len(list(find_all("ababa", "aba"))) == 2
 
-    index = fmindex.FMIndex(example_text)
 
-    distinct_words = set(example_text.split())
-    # count the words the old fashioned way
-    counter = Counter()
-    for word in distinct_words:
-        i = 0
-        while i < len(example_text):
-            i = example_text.find(word, i)
-            if i == -1:
-                break
-            counter[word] += 1
-            i += 1
+def test_find(example_string):
+    index = FMIndex("Tomorrow_and_tomorrow_and_tomorrow")
+    assert len(index.find("tomorrow")) == 2
 
-    # count the words using fm index
-    fm_occurence_counts = {}
-    for word in distinct_words:
-        fm_occurence_counts[word] = len(index.find(word))
 
-    # compare!
-    print(counter)
-    for word in distinct_words:
-        print(word)
-        assert fm_occurence_counts[word] == counter[word]
+def test_find_on_ipsum(example_text):
+    index = FMIndex(example_text)
+    words = example_text.split()
+    distinct_words = set(words)
+
+    naive_occurrences = {word: len(list(find_all(example_text, word))) for word in distinct_words}
+    fm_occurrences = {word: len(index.find(word)) for word in distinct_words}
+    assert fm_occurrences == naive_occurrences

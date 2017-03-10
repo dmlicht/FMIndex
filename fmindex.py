@@ -1,17 +1,16 @@
 from collections import Counter
-import itertools
 import sys
-from typing import List, Mapping, Sequence
+from typing import Mapping, Sequence
 
 import t_rank
-from suffix_array import SuffixArray
 
 
-def calculate_n_occuring_lower_letters(text: List[str]) -> Mapping[str, int]:
-    """ returns a mapping of characters to the number of lexicographically lower valued letters occurring in the string.
-    A lexicographically lower valued character is one that would appear earlier in the alphabet.
+def n_less_than(letters: Sequence[str]) -> Mapping[str, int]:
+    """ returns a mapping of values that occur to the number of values in the sequence that are less than it.
+
+    NOTE: A lexicographically lower valued character is one that would appear earlier in the alphabet.
     For example A is lexicographically lower valued than B. """
-    character_counts = Counter(text)
+    character_counts = Counter(letters)
     lexicographically_sorted_character_counts = sorted(character_counts.items())
 
     lower_char_count = 0
@@ -48,7 +47,7 @@ class FMIndex():
         self.bwt = [self.text[i - 1] for i in self.suffix_array]
 
         # occurrences of lexicographically lower valued characters in text
-        self.occ_lex_lower = calculate_n_occuring_lower_letters(self.bwt)
+        self.occ_lex_lower = n_less_than(self.bwt)
         self.rank_cps = t_rank.TRank(self.bwt, self.occ_lex_lower.keys())
 
     # NOTE:Below two function (csa, rc) not being used
