@@ -1,4 +1,4 @@
-def find_all(outer, inner):
+def find_all_overlapping(outer, inner):
     """ Find all occurrences of inner in outer """
 
     next_start = 0

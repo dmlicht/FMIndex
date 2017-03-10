@@ -4,7 +4,7 @@ import pytest
 
 import fmindex
 from fmindex import n_less_than, FMIndex
-from util import find_all
+from util import find_all_overlapping
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_n_less_than(example_string):
 
 
 def test_naive_find_all():
-    assert len(list(find_all("ababa", "aba"))) == 2
+    assert len(list(find_all_overlapping("ababa", "aba"))) == 2
 
 
 def test_find(example_string):
@@ -56,6 +56,6 @@ def test_find_on_ipsum(example_text):
     words = example_text.split()
     distinct_words = set(words)
 
-    naive_occurrences = {word: len(list(find_all(example_text, word))) for word in distinct_words}
+    naive_occurrences = {word: len(list(find_all_overlapping(example_text, word))) for word in distinct_words}
     fm_occurrences = {word: len(index.find(word)) for word in distinct_words}
     assert fm_occurrences == naive_occurrences
