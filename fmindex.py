@@ -27,20 +27,7 @@ def create_suffix_array_naive(text):
 
 class FMIndex():
     def __init__(self, text):
-        # handles pysuffix sorting
         self.text = text
-
-        self.text_len = len(text)
-        # text_unicode = tools.utf82unicode(text)
-
-        # TODO: use instead of self.create_suffix_array if we need faster suffix array creation
-        # sa = SuffixArray()
-        # sa._add_str(text)
-        # sa.karkkainen_sort()
-        # sa.str_array = ""  # free up some memory
-        # self.suffix_array = sa.suffix_array[:-3]  # pysuffix appends 3 0's at the end of the suffix array
-        # del sa
-
         self.suffix_array = create_suffix_array_naive(self.text)
 
         # bwt = burrows wheeler transformed string
@@ -49,25 +36,6 @@ class FMIndex():
         # occurrences of lexicographically lower valued characters in text
         self.occ_lex_lower = n_less_than(self.bwt)
         self.rank_cps = t_rank.TRank(self.bwt, self.occ_lex_lower.keys())
-
-    # NOTE:Below two function (csa, rc) not being used
-    # just temporarily kept to verify results of karkkainen sort
-    # until more permanant solution in place
-    # def create_suffix_array(self, text):
-    #     """create suffix array representation of given text"""
-    #     suffix_refs = range(len(text))
-    #     # TODO: Solve comparator issue
-    #     return sorted(suffix_refs, cmp=self.ref_comp)
-
-    def ref_comp(self, x, y):
-        """compare two references to the text
-        checks which points to a greater valued suffix"""
-        i = 0
-        while self.text[x + i] == self.text[y + i]:
-            if self.text[x + i] == '$':
-                return x - y
-            i += 1
-        return ord(self.text[x + i]) - ord(self.text[y + i])
 
     def find(self, sub: str) -> Sequence[int]:
         """return indices of occurrences of pattern in the text"""
@@ -82,7 +50,7 @@ class FMIndex():
         returning start with value greater than end indicates no hits were found"""
         rs = reversed(p)
         start = 0
-        end = self.text_len - 1
+        end = len(self.text) - 1
         for c in rs:
             start, end = self.backtrace_step(c, start, end)
             if start > end:  # start will be greater than end if no matches
@@ -110,7 +78,7 @@ class FMIndex():
         """returns all strings with prefix overlap over given min_overlap_len"""
         rs = reversed(p)
         start = 0
-        end = self.text_len - 1
+        end = len(self.text) - 1
         chars_into_p = 0
         all_overlaps = []
         for c in rs:
@@ -176,7 +144,7 @@ class FMIndex():
                 before.append(prev_char)
 
         # get all character up to next separator
-        for i in range(self.text_len - offset):
+        for i in range(len(self.text) - offset):
             next_char = self.text[offset + i]
             if next_char == '$':
                 break
