@@ -5,13 +5,13 @@ A compressed data structure for efficiently searching strings.
 ## Usage
 
 ```python
-    from fmindex import FMIndex
+from fmindex import FMIndex
 
 
-    text = "ababcabcd"
-    index = FMIndex(text)
-    occurrences = index.find("ab")
-    print(occurrences)
+text = "ababcabcd"
+index = FMIndex(text)
+occurrences = index.find("ab")
+print(occurrences)
 
 ```
 
@@ -26,7 +26,7 @@ will print `[0, 2, 5]`
 
 From the root directory run:
 
-    pytest
+    python -m pytest test
 
 If you don't have `pytest`:
 
