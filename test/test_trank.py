@@ -6,7 +6,7 @@ import pytest
 @pytest.fixture()
 def text_blob():
     text_blob = None
-    with open('tests/ipsum.txt') as f:
+    with open('test/ipsum.txt') as f:
         text_blob = f.read()
     return text_blob.replace(' ', '_')
 

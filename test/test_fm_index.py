@@ -14,7 +14,7 @@ def example_string():
 
 @pytest.fixture
 def example_text():
-    with open('tests/ipsum.txt') as f:
+    with open('test/ipsum.txt') as f:
         return f.read()
 
 
